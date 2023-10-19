@@ -11,7 +11,7 @@
 #include <DHT.h>
 
 // DHT11 sensor pins
-#define DHTPIN 26
+#define DHTPIN 4
 #define DHTTYPE DHT11
 
 // Create aREST instance
@@ -24,69 +24,74 @@ DHT dht(DHTPIN, DHTTYPE, 15);
 const char* ssid = "Proxima";
 const char* password = "centauri";
 //Static IP address configuration
-// P connections 
-#define LISTEN_PORT           80
+// P connections
+#define LISTEN_PORT 80
 
 // Create an instance of the server
 WiFiServer server(LISTEN_PORT);
 
 // Variables to be exposed to the API
-float temperature;
-float humidity;
-char* location = "Al Fresco";
+float temperature = -1;
+float humidity = -1;
+char* location = "Western front";
 int timer = 72000;
 
 // Declare functions to be exposed to the API
 int ledControl(String command);
 
-void setup(void)
-{  
+void setup(void) {
   // Start Serial
   Serial.begin(115200);
-  
-  // Init DHT 
+
+  // Init DHT
   dht.begin();
-  
+  delay(2000);
+
   // Init variables and expose them to REST API
-  rest.variable("temperature",&temperature);
-  rest.variable("humidity",&humidity);
-  rest.variable("location",&location);
-    
+  rest.variable("temperature", &temperature);
+  rest.variable("humidity", &humidity);
+  rest.variable("location", &location);
+
   // Give name and ID to device
-  rest.set_id("xxx");
+  rest.set_id("210");
   rest.set_name("alpha-xxx");
-  
+
   // Connect to WiFi
   WiFi.begin(ssid, password);
-  IPAddress ip(192, 168, 1, xxx); //set static ip
-  IPAddress gateway(192, 168, 1, 1); //set getteway
+  IPAddress ip(192, 168, 1, 210);     //set static ip
+  IPAddress gateway(192, 168, 1, 1);  //set getteway
   Serial.print(F("Setting static ip to : "));
   Serial.println(ip);
-  IPAddress subnet(255, 255, 255, 0);//set subnet
+  IPAddress subnet(255, 255, 255, 0);  //set subnet
   WiFi.config(ip, gateway, subnet);
 
-  
+
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.print(".");
+    Serial.print("");
   }
+
+
   Serial.println("");
   Serial.println("WiFi connected");
- 
+
   // Start the server
   server.begin();
   Serial.println("Server started");
-  
+
   // Print the IP address
   Serial.println(WiFi.localIP());
-  
 }
 
 void loop() {
-  
+
   // Reading temperature and humidity
   temperature = dht.readTemperature();
   humidity = dht.readHumidity();
+
+  Serial.print("WiFi status: ");
+  Serial.println(WiFi.status());
+
 
   // Prints the temperature in celsius
   Serial.print("Temperature: ");
@@ -95,22 +100,24 @@ void loop() {
   Serial.println(humidity);
   Serial.print("Timer: ");
   Serial.println(timer);
-  delay(5000);
+  //Serial.println("卐 HEIL HITLER! 卐");
+  delay(1000);
   timer--;
 
+
   //Check running time and reset if expired
-  if (timer == 0 ) {
+  if (timer == 0) {
     delay(3000);
     Serial.println("Resetting..");
     ESP.restart();
   }
-  
+
   // Handle REST calls
   WiFiClient client = server.available();
   if (!client) {
     return;
   }
-  while(!client.available()){
+  while (!client.available()) {
     delay(1);
   }
   rest.handle(client);
@@ -123,6 +130,6 @@ int ledControl(String command) {
   // Get state from command
   int state = command.toInt();
 
-  digitalWrite(6,state);
+  digitalWrite(6, state);
   return 1;
 }
