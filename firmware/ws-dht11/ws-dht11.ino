@@ -100,7 +100,6 @@ void loop() {
   Serial.println(humidity);
   Serial.print("Timer: ");
   Serial.println(timer);
-  //Serial.println("卐 HEIL HITLER! 卐");
   delay(1000);
   timer--;
 
